@@ -26,14 +26,14 @@ defaults write com.apple.universalaccess reduceMotion -bool true
 # Reduce transparency
 ###############################################################################
 
-defaults write com.apple.universalaccess reduceTransparency -bool true
+#defaults write com.apple.universalaccess reduceTransparency -bool true
 
 
 ###############################################################################
 # Increase contrast slightly
 ###############################################################################
 
-defaults write com.apple.universalaccess increaseContrast -bool false
+#defaults write com.apple.universalaccess increaseContrast -bool false
 
 
 log "Accessibility optimization completed."

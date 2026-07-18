@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 
-###############################################################################
-# Docker / Container environment
-###############################################################################
-
 set -euo pipefail
 
-
-log() {
-    printf "[Docker] %s\n" "$1"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/logger.sh"
 
 
-log "Installing container tools"
+info "Installing container tools"
 
 
 ###############################################################################

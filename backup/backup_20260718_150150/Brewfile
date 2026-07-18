@@ -1,6 +1,0 @@
-# Distributed revision control system
-brew "git"
-# Java IDE by JetBrains
-cask "intellij-idea"
-# Terminal emulator as alternative to Apple's Terminal app
-cask "iterm2"

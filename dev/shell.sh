@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
 
-###############################################################################
-# ZSH environment
-###############################################################################
-
 set -euo pipefail
 
-
-log() {
-    printf "[Shell] %s\n" "$1"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/logger.sh"
 
 
 log "Configuring shell"

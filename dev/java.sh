@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 
-###############################################################################
-# Java development environment
-###############################################################################
-
 set -euo pipefail
 
-
-log() {
-    printf "[Java] %s\n" "$1"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/logger.sh"
 
 
-log "Installing Java tools"
+info "Installing Java tools"
 
 
 brew install openjdk@21 maven gradle \

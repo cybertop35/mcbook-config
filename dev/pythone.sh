@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 
-###############################################################################
-# Python AI/Data environment
-###############################################################################
-
 set -euo pipefail
 
-
-log() {
-    printf "[Python] %s\n" "$1"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/logger.sh"
 
 
-log "Installing Python tools"
+info "Installing Python tools"
 
 
 brew install python uv pipx \

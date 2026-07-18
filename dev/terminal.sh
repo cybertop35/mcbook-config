@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
 
-###############################################################################
-# Terminal productivity tools
-###############################################################################
-
 set -euo pipefail
 
-
-log() {
-    printf "[Terminal] %s\n" "$1"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/logger.sh"
 
 
 log "Installing terminal tools"

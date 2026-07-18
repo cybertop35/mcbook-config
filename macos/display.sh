@@ -35,10 +35,10 @@ apply com.apple.universalaccess reduceTransparency bool true
 
 
 ###############################################################################
-# Reduce motion
+# Reduce transparency (for display/rendering optimization)
 ###############################################################################
 
-apply com.apple.universalaccess reduceMotion bool true
+apply com.apple.universalaccess reduceTransparency bool true
 
 
 ###############################################################################
@@ -46,6 +46,34 @@ apply com.apple.universalaccess reduceMotion bool true
 ###############################################################################
 
 apply NSGlobalDomain NSAutomaticWindowAnimationsEnabled bool false
+
+
+###############################################################################
+# Disable Exposé animations
+###############################################################################
+
+apply com.apple.dock expose-animation-duration float 0.0
+
+
+###############################################################################
+# Disable Mission Control animation (kept here as it's display-related)
+###############################################################################
+
+apply com.apple.dock mcx-exposure-disabled bool true
+
+
+###############################################################################
+# Disable focus ring animation
+###############################################################################
+
+apply NSGlobalDomain NSQuaternaryControlTint int 6
+
+
+###############################################################################
+# Disable zoom effect
+###############################################################################
+
+apply com.apple.dock largesize int 0
 
 
 ###############################################################################

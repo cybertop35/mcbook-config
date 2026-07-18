@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
 
-###############################################################################
-# Homebrew setup
-###############################################################################
-
 set -euo pipefail
 
-
-log() {
-    printf "[Homebrew] %s\n" "$1"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/logger.sh"
 
 
 log "Checking Homebrew"

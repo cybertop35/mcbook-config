@@ -49,10 +49,10 @@ apply NSGlobalDomain NSAutomaticCapitalizationEnabled bool false
 
 
 ###############################################################################
-# Disable automatic correction
+# Enable automatic correction
 ###############################################################################
 
-apply NSGlobalDomain NSAutomaticSpellingCorrectionEnabled bool false
+apply NSGlobalDomain NSAutomaticSpellingCorrectionEnabled bool true
 
 
 ###############################################################################
@@ -95,7 +95,7 @@ defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 # (comment if you prefer media keys)
 ###############################################################################
 
-defaults write NSGlobalDomain com.apple.keyboard.fnState -bool true
+# defaults write NSGlobalDomain com.apple.keyboard.fnState -bool true
 
 
 ###############################################################################
