@@ -1,516 +1,321 @@
 #!/usr/bin/env bash
 
-################################################################################
-#
-# MacBook Configuration Manager
-#
-# Master control script for MacBook optimization and configuration.
-# Provides unified backup/restore/apply functionality for all modules.
-#
-# Usage:
-#   ./mcbook.sh backup [module]         Create backup
-#   ./mcbook.sh apply [module]          Apply configuration
-#   ./mcbook.sh restore <backup-path>   Restore from backup
-#   ./mcbook.sh list                    List available modules
-#   ./mcbook.sh status                  Show backup status
-#   ./mcbook.sh clean                   Clean old backups
-#
-################################################################################
-
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$SCRIPT_DIR/lib/logger.sh"
+source "$SCRIPT_DIR/lib/backup_lib.sh"
 
-
-BACKUP_BASE="$HOME/.mcbook-backups"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-CURRENT_BACKUP="$BACKUP_BASE/backup_$TIMESTAMP"
-
-# Source centralized logging
-
-# Color codes for enhanced output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-################################################################################
-# Module Definitions
-################################################################################
-
-# macOS optimization modules
 MACOS_MODULES=(
-    "accessibility"
-    "battery"
-    "cpu-memory"
-    "desktop"
-    "display"
-    "dock"
-    "finder"
-    "keyboard"
-    "login"
-    "mouse"
-    "network"
-    "notifications"
-    "performance"
-    "power"
-    "privacy"
-    "security"
-    "spotlight"
-    "trackpad"
+    accessibility
+    battery
+    cpu-memory
+    desktop
+    display
+    dock
+    finder
+    keyboard
+    login
+    mouse
+    network
+    notifications
+    power
+    privacy
+    security
+    spotlight
+    trackpad
 )
 
-# Development modules
 DEV_MODULES=(
-    "homebrew"
-    "git"
-    "shell"
-    "terminal"
-    "docker"
-    "java"
-    "pythone"
+    homebrew
+    git
+    shell
+    terminal
+    docker
+    java
+    python
 )
 
-# All modules
 ALL_MODULES=("${MACOS_MODULES[@]}" "${DEV_MODULES[@]}")
 
-################################################################################
-# Backup/Restore Functions
-################################################################################
+if [[ -t 1 && "${NO_COLOR:-}" != "1" ]]; then
+    GREEN=$'\033[0;32m'
+    BLUE=$'\033[0;34m'
+    YELLOW=$'\033[1;33m'
+    RESET=$'\033[0m'
+else
+    GREEN=""
+    BLUE=""
+    YELLOW=""
+    RESET=""
+fi
 
-create_backup() {
+module_script() {
     local module="$1"
-    
-    mkdir -p "$CURRENT_BACKUP"
-    echo "Current backup folder $CURRENT_BACKUP"
-    if [ "$module" = "all" ]; then
-        log "Creating comprehensive backup for all modules..."
-        _backup_system_defaults
-        _backup_applications
-        _backup_configs
-    else
-        log "Creating backup for module: $module"
-        _backup_system_defaults "$module"
+
+    if [[ -f "$SCRIPT_DIR/macos/$module.sh" ]]; then
+        printf '%s\n' "$SCRIPT_DIR/macos/$module.sh"
+        return 0
     fi
-    
-    echo "$CURRENT_BACKUP"
+
+    if [[ -f "$SCRIPT_DIR/dev/$module.sh" ]]; then
+        printf '%s\n' "$SCRIPT_DIR/dev/$module.sh"
+        return 0
+    fi
+
+    return 1
 }
 
-_backup_system_defaults() {
-   # local module="$1"
-    
-    info "Backing up macOS defaults..."
-    
-    # Create defaults directory
-    mkdir -p "$CURRENT_BACKUP/defaults"
-    
-    # Backup global settings
-    defaults export NSGlobalDomain "$CURRENT_BACKUP/defaults/global.plist" 2>/dev/null || true
-    
-    # Backup application settings (common ones)
-    for app in com.apple.finder com.apple.dock com.apple.universalaccess com.apple.screencapture com.apple.mouse; do
-        defaults export "$app" "$CURRENT_BACKUP/defaults/${app##*.}.plist" 2>/dev/null || true
+module_exists() {
+    local module="$1"
+    local candidate
+
+    for candidate in "${ALL_MODULES[@]}"; do
+        [[ "$candidate" == "$module" ]] && return 0
     done
-    
-    info "System defaults backed up to: $CURRENT_BACKUP/defaults/"
+
+    return 1
 }
 
-_backup_applications() {
-    info "Backing up Homebrew packages..."
-    mkdir -p "$CURRENT_BACKUP/apps"
-    
-    if command -v brew >/dev/null 2>&1; then
-        brew bundle dump --file="$CURRENT_BACKUP/apps/Brewfile" --force 2>/dev/null || true
-    fi
-}
+apply_one_module() {
+    local module="$1"
+    local script_path
 
-_backup_configs() {
-    info "Backing up configuration files..."
-    mkdir -p "$CURRENT_BACKUP/config"
-    
-    [ -f ~/.zshrc ] && cp ~/.zshrc "$CURRENT_BACKUP/config/zshrc" || true
-    [ -f ~/.gitconfig ] && cp ~/.gitconfig "$CURRENT_BACKUP/config/gitconfig" || true
-    [ -f ~/.bashrc ] && cp ~/.bashrc "$CURRENT_BACKUP/config/bashrc" || true
-    [ -f ~/.ssh/config ] && cp ~/.ssh/config "$CURRENT_BACKUP/config/ssh_config" || true
-}
-
-restore_backup() {
-    local backup_path="$1"
-    
-    if [ ! -d "$backup_path" ]; then
-        error "Backup directory not found: $backup_path"
+    if ! module_exists "$module"; then
+        error "Unknown module: $module"
         return 1
     fi
-    
-    log "Restoring from backup: $backup_path"
-    
-    # Restore defaults
-    if [ -d "$backup_path/defaults" ]; then
-        info "Restoring system defaults..."
-        defaults import NSGlobalDomain "$backup_path/defaults/global.plist" 2>/dev/null || true
-        
-        for plist in "$backup_path/defaults"/*.plist; do
-            [ "$plist" != "$backup_path/defaults/global.plist" ] || continue
-            local domain=$(basename "$plist" .plist)
-            defaults import "com.apple.$domain" "$plist" 2>/dev/null || true
-        done
+
+    if ! script_path="$(module_script "$module")"; then
+        error "Module script missing: $module"
+        return 1
     fi
-    
-    # Restart affected services
-    info "Restarting system services..."
-    killall Finder 2>/dev/null || true
-    killall Dock 2>/dev/null || true
-    killall SystemUIServer 2>/dev/null || true
-    
-    log "Restore completed from: $backup_path"
+
+    info "Applying module: $module"
+    create_backup "$module" >/dev/null
+
+    if ! bash "$script_path" apply; then
+        error "Failed to apply module: $module"
+        return 1
+    fi
 }
 
-################################################################################
-# Module Application Functions
-################################################################################
+apply_modules() {
+    local module="${1:-all}"
+    local failed=0
 
-apply_module() {
-    local module="$1"
-    
-    if [ "$module" = "all" ]; then
-        apply_all_modules
+    if [[ "$module" != "all" ]]; then
+        apply_one_module "$module"
         return
     fi
-    
-    # Find the module script
-    local script_path=""
-    for dir in "$SCRIPT_DIR/macos" "$SCRIPT_DIR/dev"; do
-        if [ -f "$dir/${module}.sh" ]; then
-            script_path="$dir/${module}.sh"
-            break
+
+    info "Applying all modules"
+    create_backup all >/dev/null
+
+    for module in "${ALL_MODULES[@]}"; do
+        if ! apply_one_module_without_backup "$module"; then
+            failed=1
         fi
     done
-    
-    if [ -z "$script_path" ]; then
-        error "Module not found: $module"
+
+    if [[ "$failed" -ne 0 ]]; then
+        error "One or more modules failed"
         return 1
     fi
-    
-    log "Applying module: $module"
-    
-    # First backup
-    create_backup "$module"
-    
-    # Then apply
-    bash "$script_path" 2>&1 || error "Failed to apply module: $module"
-    log "Module applied: $module"
+
+    info "All modules applied"
 }
 
-apply_all_modules() {
-    log "Applying all modules..."
-    
-    # Create full backup first
-    create_backup "all"
-    
-    # Apply macOS modules first
-    for module in "${MACOS_MODULES[@]}"; do
-        local script="$SCRIPT_DIR/macos/${module}.sh"
-        if [ -f "$script" ]; then
-            info "Applying: $module"
-            bash "$script" 2>&1 || warn "Failed to apply module: $module"
-        fi
-    done
-    
-    # Then development modules
-    for module in "${DEV_MODULES[@]}"; do
-        local script="$SCRIPT_DIR/dev/${module}.sh"
-        if [ -f "$script" ]; then
-            info "Applying: $module"
-            bash "$script" 2>&1 || warn "Failed to apply module: $module"
-        fi
-    done
-    
-    log "All modules applied successfully"
-}
+apply_one_module_without_backup() {
+    local module="$1"
+    local script_path
 
-################################################################################
-# List and Status Functions
-################################################################################
+    if ! script_path="$(module_script "$module")"; then
+        warn "Skipping missing module script: $module"
+        return 1
+    fi
+
+    info "Applying module: $module"
+
+    if ! bash "$script_path" apply; then
+        warn "Failed to apply module: $module"
+        return 1
+    fi
+}
 
 list_modules() {
-    echo ""
-    echo "Available macOS Optimization Modules:"
-    echo "────────────────────────────────────"
+    printf '\n%sAvailable macOS Modules:%s\n' "$BLUE" "$RESET"
+    local module script_path
     for module in "${MACOS_MODULES[@]}"; do
-        local script="$SCRIPT_DIR/macos/${module}.sh"
-        local status="✓"
-        [ -f "$script" ] || status="✗"
-        printf "  ${status} %-20s (%s)\n" "$module" "$([ -f "$script" ] && echo 'ready' || echo 'missing')"
+        if script_path="$(module_script "$module")"; then
+            printf '  ✓ %-18s %s\n' "$module" "${script_path#$SCRIPT_DIR/}"
+        else
+            printf '  ✗ %-18s missing\n' "$module"
+        fi
     done
-    
-    echo ""
-    echo "Available Development Modules:"
-    echo "──────────────────────────────"
+
+    printf '\n%sAvailable Development Modules:%s\n' "$BLUE" "$RESET"
     for module in "${DEV_MODULES[@]}"; do
-        local script="$SCRIPT_DIR/dev/${module}.sh"
-        local status="✓"
-        [ -f "$script" ] || status="✗"
-        printf "  ${status} %-20s (%s)\n" "$module" "$([ -f "$script" ] && echo 'ready' || echo 'missing')"
+        if script_path="$(module_script "$module")"; then
+            printf '  ✓ %-18s %s\n' "$module" "${script_path#$SCRIPT_DIR/}"
+        else
+            printf '  ✗ %-18s missing\n' "$module"
+        fi
     done
-    echo ""
+    printf '\n'
 }
 
 show_status() {
-    echo ""
     info "System Configuration Status"
-    echo ""
-    
-    # Show backup status
-    if [ -d "$BACKUP_BASE" ]; then
-        local backup_count=$(find "$BACKUP_BASE" -type d -name "backup_*" | wc -l)
-        echo "Backups available: $backup_count"
-        echo ""
-        echo "Recent backups:"
-        find "$BACKUP_BASE" -type d -name "backup_*" -printf '%T@ %p\n' | sort -rn | head -5 | while read -r _ path; do
-            local name=$(basename "$path")
-            echo "  • $name"
+
+    if [[ -d "$BACKUP_BASE" ]]; then
+        local backup_count
+        backup_count="$(find "$BACKUP_BASE" -type d -name 'backup_*' | wc -l | tr -d ' ')"
+        printf 'Backups available: %s\n' "$backup_count"
+        find "$BACKUP_BASE" -maxdepth 1 -type d -name 'backup_*' -print | sort -r | head -5 | while IFS= read -r backup; do
+            printf '  • %s\n' "$(basename "$backup")"
         done
     else
         warn "No backups found yet"
     fi
-    
-    echo ""
-    echo "Current macOS defaults:"
-    defaults read com.apple.universalaccess reduceMotion 2>/dev/null && echo "  ✓ Reduce Motion: enabled" || echo "  ✗ Reduce Motion: disabled"
-    defaults read com.apple.universalaccess reduceTransparency 2>/dev/null && echo "  ✓ Reduce Transparency: enabled" || echo "  ✗ Reduce Transparency: disabled"
-    defaults read com.apple.dock autohide 2>/dev/null && echo "  ✓ Dock Autohide: enabled" || echo "  ✗ Dock Autohide: disabled"
-    
-    echo ""
+
+    printf '\nCurrent macOS defaults:\n'
+    defaults read com.apple.universalaccess reduceMotion 2>/dev/null && printf '  ✓ Reduce Motion: enabled\n' || printf '  ✗ Reduce Motion: disabled\n'
+    defaults read com.apple.universalaccess reduceTransparency 2>/dev/null && printf '  ✓ Reduce Transparency: enabled\n' || printf '  ✗ Reduce Transparency: disabled\n'
+    defaults read com.apple.dock autohide 2>/dev/null && printf '  ✓ Dock Autohide: enabled\n' || printf '  ✗ Dock Autohide: disabled\n'
 }
 
 show_backups() {
-    echo ""
-    info "Available Backups"
-    echo ""
-    
-    if [ ! -d "$BACKUP_BASE" ]; then
+    if [[ ! -d "$BACKUP_BASE" ]]; then
         warn "No backups exist yet"
         return
     fi
-    
-    find "$BACKUP_BASE" -maxdepth 1 -type d -name "backup_*" | sort -r | while read -r backup; do
-        local name=$(basename "$backup")
-        local size=$(du -sh "$backup" | cut -f1)
-        local date="${name:7:8}"
-        local time="${name:16:6}"
-        echo "  • $name (${size})"
+
+    info "Available backups"
+    find "$BACKUP_BASE" -maxdepth 1 -type d -name 'backup_*' -print | sort -r | while IFS= read -r backup; do
+        printf '  • %s (%s)\n' "$(basename "$backup")" "$(du -sh "$backup" | awk '{print $1}')"
     done
-    
-    echo ""
 }
 
 clean_backups() {
-    info "Cleaning old backups..."
-    
-    if [ ! -d "$BACKUP_BASE" ]; then
+    if [[ ! -d "$BACKUP_BASE" ]]; then
         warn "No backups to clean"
         return
     fi
-    
-    # Keep only last 10 backups
-    find "$BACKUP_BASE" -maxdepth 1 -type d -name "backup_*" | sort -r | tail -n +11 | while read -r backup; do
+
+    find "$BACKUP_BASE" -maxdepth 1 -type d -name 'backup_*' -print | sort -r | tail -n +11 | while IFS= read -r backup; do
         warn "Removing old backup: $(basename "$backup")"
         rm -rf "$backup"
     done
-    
-    log "Cleanup completed"
-}
 
-################################################################################
-# Validation Functions
-################################################################################
+    info "Cleanup completed"
+}
 
 validate_setup() {
-    echo ""
-    info "Validating setup..."
-    echo ""
-    
-    # Check key modules exist
-    local total_modules=0
-    local found_modules=0
-    
-    for module in "${MACOS_MODULES[@]}" "${DEV_MODULES[@]}"; do
-        ((total_modules++))
-        if [ -f "$SCRIPT_DIR/macos/${module}.sh" ] || [ -f "$SCRIPT_DIR/dev/${module}.sh" ]; then
-            ((found_modules++))
-        fi
+    local total=0
+    local found=0
+    local module
+
+    for module in "${ALL_MODULES[@]}"; do
+        total=$((total + 1))
+        module_script "$module" >/dev/null && found=$((found + 1))
     done
-    
-    echo "Modules: $found_modules/$total_modules found"
-    
-    # Check backup directory
-    [ -d "$BACKUP_BASE" ] && echo "Backup directory: ✓ $BACKUP_BASE" || echo "Backup directory: ✗ Not found (will be created)"
-    
-    # Check required commands
-    local commands=("defaults" "killall" "date")
-    for cmd in "${commands[@]}"; do
-        if command -v "$cmd" >/dev/null 2>&1; then
-            echo "Command '$cmd': ✓"
+
+    printf 'Modules: %s/%s found\n' "$found" "$total"
+    [[ -d "$BACKUP_BASE" ]] && printf 'Backup directory: ✓ %s\n' "$BACKUP_BASE" || printf 'Backup directory: will be created at %s\n' "$BACKUP_BASE"
+
+    for command in defaults killall date; do
+        if command -v "$command" >/dev/null 2>&1; then
+            printf "Command '%s': ✓\n" "$command"
         else
-            echo "Command '$cmd': ✗"
+            printf "Command '%s': ✗\n" "$command"
         fi
     done
-    
-    echo ""
 }
 
-################################################################################
-# Help Function
-################################################################################
-
 show_help() {
-    cat << EOF
-
-${GREEN}MacBook Configuration Manager${NC}
+    printf '%b\n' "\
+${GREEN}MacBook Configuration Manager${RESET}
 
 A unified control center for MacBook optimization and configuration.
 
-${BLUE}USAGE:${NC}
-    mcbook.sh [COMMAND] [OPTIONS]
+${BLUE}USAGE:${RESET}
+    ./mcbook.sh <command> [module]
 
-${BLUE}COMMANDS:${NC}
-    apply [module]           Apply configuration for a module or all modules
-                            Default: all modules
-                            
-                            Examples:
-                              mcbook.sh apply dock
-                              mcbook.sh apply all
-                              mcbook.sh apply                # applies all
+${BLUE}COMMANDS:${RESET}
+    apply [module]       Apply all modules or a single module. Default: all.
+    backup [module]      Create a backup for all modules or one module. Default: all.
+    restore <path>       Restore a backup.
+    list                 List available modules.
+    status               Show configuration and backup status.
+    backups              Show available backups.
+    clean                Remove old backups, keeping the latest 10.
+    validate             Validate script/module availability.
+    help                 Show this help.
 
-    backup [module]         Create a backup before applying changes
-                            Default: backup all settings
-                            
-                            Examples:
-                              mcbook.sh backup
-                              mcbook.sh backup dock
+${BLUE}EXAMPLES:${RESET}
+    ./mcbook.sh apply
+    ./mcbook.sh apply dock
+    ./mcbook.sh backup
+    ./mcbook.sh backup python
+    ./mcbook.sh restore ~/.mcbook-backups/backup_20260718_153000_all
 
-    restore <path>         Restore system to previous state
-                           
-                           Examples:
-                             mcbook.sh restore ~/.mcbook-backups/backup_20260718_153000
-                             mcbook.sh restore \$(ls -td ~/.mcbook-backups/backup_* | head -1)
+${BLUE}MODULES:${RESET}
+    macOS: ${MACOS_MODULES[*]}
+    dev:   ${DEV_MODULES[*]}
 
-    list                   List all available modules
-
-    status                 Show current configuration status
-
-    backups                Show available backups
-
-    clean                  Remove old backups (keeps latest 10)
-
-    validate               Validate system setup
-
-    help                   Show this help message
-
-${BLUE}EXAMPLES:${NC}
-    
-    # Apply all optimizations with automatic backup
-    mcbook.sh apply
-    
-    # Apply just dock optimization
-    mcbook.sh apply dock
-    
-    # Backup current state
-    mcbook.sh backup
-    
-    # Restore from specific backup
-    mcbook.sh restore ~/.mcbook-backups/backup_20260718_153000
-    
-    # View available backups
-    mcbook.sh backups
-    
-    # Check system status
-    mcbook.sh status
-    
-    # List all available modules
-    mcbook.sh list
-
-${BLUE}MODULES:${NC}
-
-macOS Optimization:
-    ${MACOS_MODULES[*]}
-
-Development Setup:
-    ${DEV_MODULES[*]}
-
-${BLUE}BACKUP LOCATION:${NC}
-    ~/.mcbook-backups/
-
-${BLUE}NOTES:${NC}
-    • Backups are created automatically when applying changes
-    • All changes are reversible through restore
-    • Latest 10 backups are kept by default
-    • Use 'mcbook.sh clean' to remove old backups
-
-EOF
+${YELLOW}Backup location:${RESET} $BACKUP_BASE
+"
 }
-
-################################################################################
-# Main Script Logic
-################################################################################
 
 main() {
     local command="${1:-help}"
-    
+    local module="${2:-all}"
+
     case "$command" in
         apply)
-            local module="${2:-all}"
-            apply_module "$module"
+            apply_modules "$module"
             ;;
-            
         backup)
-            local module="${2:-all}"
+            if [[ "$module" != "all" ]] && ! module_exists "$module"; then
+                error "Unknown module: $module"
+                return 1
+            fi
             create_backup "$module"
             ;;
-            
         restore)
-            if [ -z "${2:-}" ]; then
+            if [[ -z "${2:-}" ]]; then
                 error "Backup path required"
-                echo "Usage: mcbook.sh restore <backup-path>"
+                printf 'Usage: ./mcbook.sh restore <backup-path>\n'
                 return 1
             fi
             restore_backup "$2"
             ;;
-            
         list)
             list_modules
             ;;
-            
         status)
             show_status
             ;;
-            
         backups)
             show_backups
             ;;
-            
         clean)
             clean_backups
             ;;
-            
         validate)
             validate_setup
             ;;
-            
         help|-h|--help)
             show_help
             ;;
-            
         *)
             error "Unknown command: $command"
-            echo ""
-            echo "Use 'mcbook.sh help' for usage information"
+            printf "Use './mcbook.sh help' for usage information.\n"
             return 1
             ;;
     esac
 }
 
-# Run main function
 main "$@"

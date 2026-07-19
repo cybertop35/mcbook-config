@@ -13,15 +13,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/module.sh"
 
-log() {
-    printf "[Display] %s\n" "$1"
-}
-
-
-apply() {
-    defaults write "$1" "$2" "-$3" "$4" 2>/dev/null || true
-}
+apply_module_config() {
 
 
 log "Configuring display..."
@@ -107,3 +102,6 @@ defaults write com.apple.screencapture disable-shadow -bool true
 ###############################################################################
 
 log "Display optimization completed."
+}
+
+run_module_command "${1:-apply}" "${2:-}"

@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-
+source "$ROOT/lib/logger.sh"
+source "$ROOT/lib/backup_lib.sh"
 source "$ROOT/lib/validation.sh"
 
+backup() {
+    create_backup doctor
+}
 
-echo
+restore() {
+    restore_backup "$1"
+}
 
-echo "=== Mac Bootstrap Doctor ==="
-
+log "Mac Bootstrap Doctor"
 run_checks
 
-
-echo
-
-echo "Installed developer tools"
-
+log "Installed developer tools"
 command -v git
 command -v python3
 command -v java

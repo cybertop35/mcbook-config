@@ -1,347 +1,351 @@
-# MacBook M5 Performance Optimization Guide
+# MacBook Optimization Guide
 
 ## Overview
-This comprehensive optimization suite reduces animations and optimizes CPU/memory usage specifically for MacBook M5 models, significantly improving system responsiveness and reducing battery drain.
 
-# Complete Command Reference
+This repository provides a modular MacBook configuration manager. The current implementation focuses on repeatable macOS settings, development environment setup, centralized logging, and reversible changes through backups.
+
+The main entrypoint is [mcbook.sh](/Users/marco/project/repository/mcbook-config/mcbook.sh).
+
+## Command Reference
 
 ### Apply Configuration
+
 ```bash
-mcbook.sh apply              # Apply all modules (with auto-backup)
-mcbook.sh apply dock         # Apply specific module
-mcbook.sh apply cpu-memory   # Apply another module
+./mcbook.sh apply              # Apply all modules with an automatic full backup
+./mcbook.sh apply dock         # Apply one module with an automatic module backup
+./mcbook.sh apply cpu-memory   # Apply another single module
 ```
 
 ### Backup Management
+
 ```bash
-mcbook.sh backup             # Backup all configurations
-mcbook.sh backup dock        # Backup specific module
-mcbook.sh backups            # List all available backups
-mcbook.sh clean              # Remove old backups (keep 10)
+./mcbook.sh backup             # Backup all supported configuration areas
+./mcbook.sh backup dock        # Backup one module's related configuration
+./mcbook.sh backups            # List available backups
+./mcbook.sh clean              # Remove old backups, keeping the latest 10
 ```
 
 ### Restore Configuration
+
 ```bash
-mcbook.sh restore ~/.mcbook-backups/backup_20260718_154000
-mcbook.sh restore $(ls -td ~/.mcbook-backups/backup_* | head -1)  # Latest
+./mcbook.sh restore ~/.mcbook-backups/backup_20260718_154000_all
+./mcbook.sh restore "$(ls -td ~/.mcbook-backups/backup_* | head -1)"
 ```
 
 ### Information
-```bash
-mcbook.sh list               # List all 32 available modules
-mcbook.sh status             # Show current system configuration
-mcbook.sh validate           # Validate system setup
-mcbook.sh help               # Show complete help
-```
 
----
+```bash
+./mcbook.sh list               # List all 24 available modules
+./mcbook.sh status             # Show current configuration and backup status
+./mcbook.sh validate           # Validate module/script availability
+./mcbook.sh help               # Show help with terminal colors when supported
+```
 
 ## Available Modules
 
-### macOS Optimization (18 modules)
-- performance, accessibility, display, dock, desktop, cpu-memory
-- battery, power, finder, keyboard, mouse, trackpad, login
-- network, notifications, privacy, security, spotlight, validate
+### macOS Optimization Modules
 
-### Development Setup (7 modules)
-- homebrew, git, shell, terminal, docker, java, pythone
+- accessibility
+- battery
+- cpu-memory
+- desktop
+- display
+- dock
+- finder
+- keyboard
+- login
+- mouse
+- network
+- notifications
+- power
+- privacy
+- security
+- spotlight
+- trackpad
 
----
+### Development Setup Modules
 
-## Backup Structure
+- homebrew
+- git
+- shell
+- terminal
+- docker
+- java
+- python
 
-Backups are stored in: `~/.mcbook-backups/`
+Notes:
 
+- The stale `performance` module entry was removed because no matching script exists.
+- `pythone.sh` was renamed to `python.sh`.
+- `macos/validate.sh` was removed because validation is handled by `./mcbook.sh validate`.
+
+## Module Interface
+
+Every module now uses the shared module helper in [lib/module.sh](/Users/marco/project/repository/mcbook-config/lib/module.sh) and supports the same commands:
+
+```bash
+bash macos/dock.sh apply
+bash macos/dock.sh backup
+bash macos/dock.sh restore ~/.mcbook-backups/backup_20260718_154000_dock
 ```
-backup_20260718_154000/
+
+When run without arguments, modules default to `apply`.
+
+## Logging
+
+All scripts use the centralized logger in [lib/logger.sh](/Users/marco/project/repository/mcbook-config/lib/logger.sh).
+
+- Logs are written to `logs/mac-bootstrap.log`.
+- Terminal output uses color when stdout is interactive.
+- Color is disabled when output is piped or `NO_COLOR=1` is set.
+- Use `log`, `info`, `warn`, and `error` instead of defining script-local logging functions.
+
+## Backup and Restore
+
+Backups are managed by [lib/backup_lib.sh](/Users/marco/project/repository/mcbook-config/lib/backup_lib.sh).
+
+Default backup location:
+
+```text
+~/.mcbook-backups/
+```
+
+Backup names include a timestamp and module name:
+
+```text
+backup_YYYYMMDD_HHMMSS_all/
+backup_YYYYMMDD_HHMMSS_dock/
+backup_YYYYMMDD_HHMMSS_python/
+```
+
+Backup structure:
+
+```text
+backup_YYYYMMDD_HHMMSS_module/
 ├── defaults/
-│   ├── global.plist
-│   ├── finder.plist
-│   ├── dock.plist
-│   └── (other app settings)
+│   └── exported macOS defaults plist files
 ├── apps/
-│   └── Brewfile
+│   └── Brewfile, when Homebrew is available and relevant
 └── config/
     ├── zshrc
+    ├── bashrc
     ├── gitconfig
-    └── (other configs)
+    └── ssh_config
 ```
 
----
+The main `apply` command creates backups automatically before applying changes.
 
----
+## Optimization Changes
 
-## Animation Optimizations Applied
+### Display Module
 
-### Display Module (`display.sh`)
-✓ **Reduce Motion**: Disables system-wide animations
-✓ **Window Animations**: Disabled for instant window interactions
-✓ **Exposé Animations**: Set to 0ms for Mission Control
-✓ **Workspace Switching**: No animation (workspaces-auto-swoosh disabled)
-✓ **Focus Ring Animation**: Optimized
-✓ **Transparency Reduction**: Reduces GPU overhead
+- Reduces motion and window animation overhead.
+- Configures screenshot format/location behavior.
+- Reduces screenshot shadow overhead.
 
-### Dock Module (`dock.sh`)
-✓ **Launch Animation**: Disabled (launchanim = false)
-✓ **Bouncing Apps**: Disabled (no-bouncing = true)
-✓ **Autohide Delay**: Instant (0 seconds)
-✓ **Autohide Animation**: 0.15s (optimized)
-✓ **Show/Hide Animation**: Minimal performance impact
-✓ **Magnification**: Disabled (reduces GPU calculations)
-✓ **Recent Apps**: Hidden (reduces memory footprint)
+### Dock Module
 
-### Accessibility Module (`accessibility.sh`)
-✓ **Reduce Motion**: System-wide animation reduction
-✓ **Reduce Transparency**: Disables blur/transparency effects
-✓ **Contrast**: Optimized for performance
+- Enables Dock autohide.
+- Reduces Dock show/hide delay.
+- Disables launch animation and bouncing.
+- Disables recent apps.
+- Uses a fast but still functional animation time.
 
-### Desktop Module (`desktop.sh`)
-✓ **Space Switching Animation**: Disabled (workspaces-auto-swoosh = false)
-✓ **Mission Control Animation**: Optimized
-✓ **Dashboard**: Disabled (mcx-disabled = true)
-✓ **Notification Animation**: Reduced (bannerTime = 5s)
+### Accessibility Module
 
----
+- Enables Reduce Motion.
+- Keeps transparency/contrast settings conservative unless explicitly enabled in the script.
 
-## CPU & Memory Optimizations (`cpu-memory.sh`)
+### Desktop Module
 
-### Global Visual Effects
-- Disables unnecessary visual effects reducing GPU/CPU load
-- Reduces checkbox animation delay (NSControlAnimationEnabledKey)
-- Disables menu poof animation (MenuBarAnimationsEnabled)
-- Removes toolbar label animation overhead
+- Reduces workspace/desktop visual overhead.
+- Disables Dashboard.
+- Reduces notification animation timing.
 
-### Memory Optimization
-- **Handoff**: Disabled (reduces background processes)
-- **AirDrop**: Disabled (reduces network overhead)
-- **Bonjour**: Disabled (reduces multicast traffic)
-- **Spring Loading**: Disabled with 0 delay
-- **Siri**: Analytics disabled (reduces background indexing)
+### CPU and Memory Module
 
-### CPU Performance
-- **GPU Optimization**: Transparency reduced for integrated GPU
-- **Spotlight Indexing**: Optimized (can disable on external drives)
-- **Extended Attributes**: Reduced syncing overhead
-- **Automatic Graphics Switching**: Disabled (M5 uses integrated GPU)
+The CPU/memory module was corrected to avoid unsafe or ineffective settings.
 
-### System-Level Tuning
+Kept:
+
+- Reduced visual effects.
+- Reduced Finder/Dock/UI animation overhead.
+- Handoff/AirDrop/Bonjour-related background reduction where configured.
+- File descriptor limit tuning.
+- Battery wake timer reduction.
+- External-volume Spotlight exclusion preference.
+
+Removed or avoided:
+
+- Disabling Spotlight indexing on `/`.
+- Forcing `pmset gpuswitch`.
+- Writing `vm.swapusage`.
+
+Reasoning:
+
+- Disabling Spotlight on the root volume usually creates more workflow damage than performance benefit.
+- `gpuswitch` is an old Intel/discrete GPU-era setting and is ineffective or misleading on modern Apple Silicon machines.
+- `vm.swapusage` is a status value, not a safe macOS tuning knob.
+
+### Development Modules
+
+Package ownership was made less duplicated:
+
+- `homebrew.sh`: Homebrew plus baseline tools/apps.
+- `terminal.sh`: terminal CLI tools and shell aliases.
+- `python.sh`: Python, `uv`, `pipx`, `ruff`, `poetry`.
+- `java.sh`: OpenJDK 21, Maven, Gradle.
+- `docker.sh`: Docker CLI, Compose, Buildx, lazy Docker runtime, and Kubernetes tools.
+
+Docker defaults:
+
+- Installs Docker CLI tooling explicitly.
+- Uses Colima as the default runtime because it only runs when started.
+- Does not start Docker during installation.
+- Adds `docker-start` and `docker-stop` aliases for manual runtime control.
+- Does not install a Docker UI by default.
+
+Optional Docker UI/runtime choices:
+
 ```bash
-sysctl -w kern.maxfilesperproc=24576  # Optimize file descriptor limits
-sysctl -w kern.maxfiles=24576         # System file limit
-sysctl -w vm.swapusage=0              # Reduce swap overhead
+DOCKER_RUNTIME=colima DOCKER_UI=none ./mcbook.sh apply docker             # default lazy runtime
+DOCKER_RUNTIME=orbstack DOCKER_UI=orbstack ./mcbook.sh apply docker       # OrbStack runtime/UI
+DOCKER_UI=docker-desktop ./mcbook.sh apply docker                         # Docker Desktop UI
+DOCKER_RUNTIME=none ./mcbook.sh apply docker                              # CLI/tools only
 ```
 
-### Power Management
-- **tcpkeepalive**: 0 (reduced wake timers on battery)
-- **GPU Switch**: Force integrated GPU for consistency
-- **Hibernation**: Mode 3 (optimal for SSDs)
-- **Standby**: Enabled for deeper sleep states
+Docker Desktop can add background/login behavior. If you install it, disable “Start Docker Desktop when you sign in” in Docker Desktop settings.
 
----
+Repeated shell configuration writes were made idempotent where practical.
 
-## Performance Impact
+## Installation and Usage
 
-### Animation Reduction Benefits
-| Setting | Impact | CPU Savings | GPU Savings |
-|---------|--------|------------|-----------|
-| Disable window animations | Instant window interactions | ~15-20% | ~10-15% |
-| Reduce motion globally | No parallax/motion effects | ~5-10% | ~5-10% |
-| Disable Dock animations | Faster app launching | ~8-12% | ~8-12% |
-| Disable transparency | Direct rendering | ~20-30% | ~25-35% |
-| Disable Exposé animation | Instant Mission Control | ~10-15% | ~15-20% |
+From the repository root:
 
-### Total Performance Gain
-- **CPU Usage**: 15-25% reduction
-- **GPU Usage**: 30-45% reduction
-- **Memory**: 5-10% reduction
-- **Battery Life**: 10-20% improvement
-
----
-
-## Installation & Usage
-
-### 1. Apply All Optimizations
 ```bash
-cd ~/project/repository/mcbook-config/macos
-
-# Apply each optimization
-./display.sh
-./dock.sh
-./accessibility.sh
-./desktop.sh
-./cpu-memory.sh
-./battery.sh
-./power.sh
+cd /Users/marco/project/repository/mcbook-config
+./mcbook.sh validate
+./mcbook.sh list
+./mcbook.sh apply
 ```
 
-### 2. Validate Configuration
+Apply one module:
+
 ```bash
-./validate.sh
+./mcbook.sh apply dock
 ```
 
-### 3. Individual Modules
-Each script can be run independently to test specific optimizations.
+Create a backup only:
 
----
-
-## Before & After Comparison
-
-### Before Optimization
-- Window animations: 200-300ms per interaction
-- Dock hide/show: 500-700ms
-- Mission Control: 300-500ms
-- Spotlight indexing: Continuous background process
-- Transparency effects: Heavy GPU load
-- System sleep: Takes 5-8 seconds
-
-### After Optimization
-- Window animations: Instant (0ms)
-- Dock hide/show: 150ms (0.15s autohide-time-modifier)
-- Mission Control: Instant (0ms)
-- Spotlight: Optimized background indexing
-- Transparency: Disabled (zero GPU overhead)
-- System sleep: 1-2 seconds
-
----
-
-## Advanced Tuning Options
-
-### For Maximum Performance (Aggressive)
 ```bash
-# Disable Spotlight completely
-sudo mdutil -i off /
-
-# Disable Time Machine
-sudo defaults write /Library/Preferences/com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
-
-# Disable cloud sync
-defaults write com.apple.sync DSMasterSync -string ERROR
-
-# Disable background app refresh (requires System Preferences)
-# Security & Privacy > Background App Refresh: Disable all
+./mcbook.sh backup
+./mcbook.sh backup python
 ```
 
-### For Battery Life (Battery Mode)
-- Already optimized in `battery.sh`
-- Display sleep: 5 seconds
-- System sleep: 10 seconds
-- Power Nap: Disabled
-- TCP keep-alive: Disabled
+Restore:
 
-### For Plugged-In Performance
-- Already optimized in `power.sh`
-- Display sleep: 15 minutes
-- System sleep: 30 minutes
-- Power Nap: Enabled
-- All GPU features available
+```bash
+./mcbook.sh backups
+./mcbook.sh restore ~/.mcbook-backups/backup_YYYYMMDD_HHMMSS_all
+```
 
----
+## Evaluation of Optimizations
+
+Good defaults:
+
+- Reducing Dock and window animation delays.
+- Enabling Reduce Motion.
+- Reducing unnecessary shell config duplication.
+- Keeping Homebrew/package ownership clear by module.
+- Creating backups automatically before changes.
+
+Use with caution:
+
+- Disabling Handoff, AirDrop, Bonjour, Siri, or location-related features can reduce background activity, but may break expected Apple ecosystem workflows.
+- Aggressive `pmset` changes affect wake/sleep behavior and should be validated on the actual machine.
+- `sudo sysctl` file descriptor tuning may not persist across reboots unless handled by a supported launch mechanism.
+
+Avoid as general defaults:
+
+- `sudo mdutil -i off /`
+- `sudo pmset -a gpuswitch ...` on Apple Silicon
+- `sudo sysctl -w vm.swapusage=0`
+- Disabling Time Machine for performance unless it is a temporary, deliberate troubleshooting step.
 
 ## Troubleshooting
 
-### Settings Not Applied?
-```bash
-# Restart affected services
-killall Finder
-killall Dock
-killall SystemUIServer
+### Settings Not Applied
 
-# Or restart completely
-sudo reboot
+Restart affected services:
+
+```bash
+killall Finder 2>/dev/null || true
+killall Dock 2>/dev/null || true
+killall SystemUIServer 2>/dev/null || true
 ```
 
-### Want to Restore Defaults?
-Each script backs up settings. Restore with:
-```bash
-defaults import NSGlobalDomain ~/mac_settings_backup_[timestamp]/global.plist
-```
+Or reboot if the setting is only read at login.
 
 ### Verify Current Settings
+
 ```bash
-# Check specific setting
 defaults read com.apple.universalaccess reduceMotion
-
-# Check all Dock settings
 defaults read com.apple.dock
-
-# Check all global settings
 defaults read NSGlobalDomain
+pmset -g
 ```
 
----
+### Validate Scripts
 
-## Recommendations for M5 Pro
+```bash
+./mcbook.sh validate
+```
 
-### CPU Cores: Use All
-- M5 Pro has 10-core CPU (8 performance + 2 efficiency)
-- All optimizations preserve full performance
-- Reduced animations don't sacrifice responsiveness
+Expected current result:
 
-### Memory Management
-- M5 Pro Base: 16GB (unified memory)
-- Disable unnecessary background processes
-- Monitor with Activity Monitor
-- Swap usage will be reduced by these optimizations
+```text
+Modules: 24/24 found
+```
 
-### Thermal Management
-- Reduced GPU load = lower thermal footprint
-- Fans run less frequently
-- Better sustained performance
+## Monitoring
 
----
+Check CPU usage:
 
-## Performance Monitoring
-
-### Check CPU Usage
 ```bash
 top -l 1 -n 5
 ```
 
-### Monitor Memory
+Check memory:
+
 ```bash
 vm_stat
 ```
 
-### Check Power Usage
+Check power state:
+
 ```bash
 pmset -g batt
+pmset -g custom
 ```
-
-### Activity Monitor
-1. Open Activity Monitor
-2. Sort by CPU or Memory
-3. Identify resource-heavy processes
-4. Close or optimize as needed
-
----
 
 ## Validation Checklist
 
-- ✓ Display animations disabled
-- ✓ Dock animations optimized
-- ✓ Accessibility settings applied
-- ✓ Desktop effects reduced
-- ✓ CPU/Memory optimizations active
-- ✓ Power management configured
-- ✓ Spotlight indexing optimized
-- ✓ System responsiveness improved
+- `./mcbook.sh help` prints readable help and uses color in an interactive terminal.
+- `./mcbook.sh list` shows 24 modules and no missing scripts.
+- `./mcbook.sh validate` reports `Modules: 24/24 found`.
+- Each module supports `apply`, `backup`, and `restore`.
+- No script-local `log()` functions remain outside `lib/logger.sh`.
+- `performance`, `pythone`, and `macos/validate.sh` are no longer referenced.
+- Unsafe optimization commands are not used as defaults.
 
----
+## Compatibility
 
-## Version Information
-
-- **Compatibility**: macOS 12+
-- **Tested On**: MacBook M5 Pro
-- **Date**: 2026
-- **Status**: Production Ready
-
----
+- Compatibility target: macOS 12+
+- Best fit: Apple Silicon MacBooks
+- Status: production-ready script cleanup, with machine-specific optimizations still worth validating on the target hardware
 
 ## Notes
 
-- All changes are reversible (backups created)
-- Animations remain functional but are instant/minimal
-- System remains fully responsive
-- No critical features disabled
-- GPU can still be used by applications (just less for system UI)
-
+- All main changes are reversible through backups.
+- Some macOS defaults are undocumented and can change across macOS versions.
+- Prefer module-level application and validation before applying all modules on a new machine.

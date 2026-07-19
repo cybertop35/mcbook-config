@@ -14,15 +14,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/module.sh"
 
-log() {
-    printf "[CPU/Memory] %s\n" "$1"
-}
-
-
-apply() {
-    defaults write "$1" "$2" "-$3" "$4" 2>/dev/null || true
-}
+apply_module_config() {
 
 
 log "Configuring CPU and memory optimizations..."
@@ -80,15 +75,13 @@ apply com.apple.Accessibility AccessibilityVisualFocusEffect bool false
 
 
 ###############################################################################
-# Optimize Spotlight indexing for performance
+# Keep Spotlight off external volumes only.
+# Disabling indexing on "/" causes poor search, broken metadata workflows, and
+# only helps temporarily while hiding the actual indexing workload.
 ###############################################################################
 
 # Disable indexing on external drives automatically
 defaults write com.apple.Spotlight ExcludedItems -array "/Volumes" 2>/dev/null || true
-
-# Reduce indexing priority
-mdutil -i off / 2>/dev/null || true
-sudo mdutil -i off / 2>/dev/null || true
 
 
 ###############################################################################
@@ -121,7 +114,7 @@ fi
 # Disable zooming of minimized windows
 ###############################################################################
 
-apply com.apple.dock mineffect suck
+apply com.apple.dock mineffect string suck
 
 
 ###############################################################################
@@ -136,11 +129,10 @@ sudo pmset -b tcpkeepalive 0 2>/dev/null || true
 
 
 ###############################################################################
-# Disable automatic graphics switching for consistent performance
+# Graphics switching is intentionally not forced.
+# Modern Apple Silicon MacBooks do not expose the old discrete/integrated GPU
+# behavior, and forcing pmset gpuswitch is ineffective or misleading.
 ###############################################################################
-
-# Force integrated GPU only on M5 Pro
-sudo pmset -a gpuswitch 2 2>/dev/null || true
 
 
 ###############################################################################
@@ -151,8 +143,7 @@ sudo pmset -a gpuswitch 2 2>/dev/null || true
 sudo sysctl -w kern.maxfilesperproc=24576 2>/dev/null || true
 sudo sysctl -w kern.maxfiles=24576 2>/dev/null || true
 
-# Increase disk cache for faster file access
-sudo sysctl -w vm.swapusage=0 2>/dev/null || true
+# vm.swapusage is a read-only status value on macOS, not a safe tuning knob.
 
 
 ###############################################################################
@@ -195,3 +186,6 @@ killall SystemUIServer 2>/dev/null || true
 
 
 log "CPU and memory optimization completed."
+}
+
+run_module_command "${1:-apply}" "${2:-}"

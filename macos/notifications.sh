@@ -6,10 +6,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/module.sh"
 
-log() {
-    printf "[Notifications] %s\n" "$1"
-}
+apply_module_config() {
 
 
 log "Reducing notification noise..."
@@ -42,3 +42,6 @@ killall NotificationCenter 2>/dev/null || true
 
 
 log "Notifications optimized."
+}
+
+run_module_command "${1:-apply}" "${2:-}"

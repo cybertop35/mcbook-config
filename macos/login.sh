@@ -6,10 +6,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/module.sh"
 
-log() {
-    printf "[Login] %s\n" "$1"
-}
+apply_module_config() {
 
 
 log "Optimizing startup..."
@@ -43,3 +43,6 @@ EOF
 
 
 log "Login optimization completed."
+}
+
+run_module_command "${1:-apply}" "${2:-}"

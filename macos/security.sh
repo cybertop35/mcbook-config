@@ -6,10 +6,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/module.sh"
 
-log() {
-    printf "[Security] %s\n" "$1"
-}
+apply_module_config() {
 
 
 log "Applying security checks..."
@@ -57,3 +57,6 @@ fdesetup status 2>/dev/null || true
 
 
 log "Security configuration completed."
+}
+
+run_module_command "${1:-apply}" "${2:-}"
