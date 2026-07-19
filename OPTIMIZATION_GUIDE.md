@@ -173,7 +173,7 @@ Kept:
 - Handoff/AirDrop/Bonjour-related background reduction where configured.
 - File descriptor limit tuning.
 - Battery wake timer reduction.
-- External-volume Spotlight exclusion preference.
+- Spotlight privacy exclusions for existing developer/cache folders such as Maven, Gradle, npm, Python caches, virtualenvs, SDKMAN, and Xcode/Library caches.
 
 Removed or avoided:
 
@@ -193,7 +193,7 @@ Package ownership was made less duplicated:
 
 - `homebrew.sh`: Homebrew plus baseline tools/apps.
 - `terminal.sh`: terminal CLI tools and shell aliases.
-- `python.sh`: Python, `uv`, `pipx`, `ruff`, `poetry`.
+- `python.sh`: installs Python only when `python3` is missing; installs `uv`/`pipx` only when missing; installs `ruff` and `poetry` through `pipx` only when absent.
 - `java.sh`: OpenJDK 21, Maven, Gradle.
 - `docker.sh`: Docker CLI, Compose, Buildx, lazy Docker runtime, and Kubernetes tools.
 

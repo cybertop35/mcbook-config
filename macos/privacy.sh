@@ -20,7 +20,7 @@ log "Applying privacy settings..."
 ###############################################################################
 
 defaults write com.apple.AdLib \
-allowApplePersonalizedAdvertising -bool false
+allowApplePersonalizedAdvertising -bool false 2>/dev/null || true
 
 
 ###############################################################################
@@ -28,7 +28,7 @@ allowApplePersonalizedAdvertising -bool false
 ###############################################################################
 
 sudo defaults write /Library/Application\ Support/CrashReporter \
-DiagnosticMessagesHistory -array
+DiagnosticMessagesHistory -array 2>/dev/null || true
 
 
 ###############################################################################
@@ -45,7 +45,7 @@ Siri Data Sharing Opt-In Status -int 2 \
 ###############################################################################
 
 defaults write com.apple.locationd \
-LocationServicesEnabled -bool true
+LocationServicesEnabled -bool true 2>/dev/null || true
 
 
 log "Privacy settings completed."

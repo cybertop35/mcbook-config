@@ -19,21 +19,21 @@ log "Configuring accessibility..."
 # Reduce animations
 ###############################################################################
 
-defaults write com.apple.universalaccess reduceMotion -bool true
+apply com.apple.universalaccess reduceMotion bool true
 
 
 ###############################################################################
 # Reduce transparency
 ###############################################################################
 
-#defaults write com.apple.universalaccess reduceTransparency -bool true
+# apply com.apple.universalaccess reduceTransparency bool true
 
 
 ###############################################################################
 # Increase contrast slightly
 ###############################################################################
 
-#defaults write com.apple.universalaccess increaseContrast -bool false
+# apply com.apple.universalaccess increaseContrast bool false
 
 
 log "Accessibility optimization completed."

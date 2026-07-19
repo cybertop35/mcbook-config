@@ -19,33 +19,33 @@ log "Configuring power profiles..."
 # AC power
 ###############################################################################
 
-sudo pmset -c sleep 30
-sudo pmset -c displaysleep 15
+sudo pmset -c sleep 30 2>/dev/null || true
+sudo pmset -c displaysleep 15 2>/dev/null || true
 
 
 ###############################################################################
 # Battery
 ###############################################################################
 
-sudo pmset -b sleep 10
-sudo pmset -b displaysleep 5
+sudo pmset -b sleep 10 2>/dev/null || true
+sudo pmset -b displaysleep 5 2>/dev/null || true
 
 
 ###############################################################################
 # Disable wake timers on battery
 ###############################################################################
 
-sudo pmset -b womp 0
+sudo pmset -b womp 0 2>/dev/null || true
 
 
 ###############################################################################
 # Enable safe standby
 ###############################################################################
 
-sudo pmset -a standby 1
+sudo pmset -a standby 1 2>/dev/null || true
 
 
-pmset -g
+pmset -g 2>/dev/null || true
 
 
 log "Power configuration completed."

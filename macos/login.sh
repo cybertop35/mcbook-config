@@ -20,7 +20,7 @@ log "Optimizing startup..."
 ###############################################################################
 
 defaults write com.apple.loginwindow \
-TALLogoutSavesState -bool false
+TALLogoutSavesState -bool false 2>/dev/null || true
 
 
 ###############################################################################
@@ -28,7 +28,7 @@ TALLogoutSavesState -bool false
 ###############################################################################
 
 defaults write com.apple.loginwindow \
-DisableFDEAutoLogin -bool false
+DisableFDEAutoLogin -bool false 2>/dev/null || true
 
 
 ###############################################################################

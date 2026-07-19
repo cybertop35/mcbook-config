@@ -78,21 +78,21 @@ apply com.apple.dock largesize int 0
 mkdir -p "$HOME/Screenshots"
 
 defaults write com.apple.screencapture location \
-"$HOME/Screenshots"
+"$HOME/Screenshots" 2>/dev/null || true
 
 
 ###############################################################################
 # PNG screenshots
 ###############################################################################
 
-defaults write com.apple.screencapture type png
+defaults write com.apple.screencapture type png 2>/dev/null || true
 
 
 ###############################################################################
 # Disable screenshot shadow
 ###############################################################################
 
-defaults write com.apple.screencapture disable-shadow -bool true
+defaults write com.apple.screencapture disable-shadow -bool true 2>/dev/null || true
 
 
 ###############################################################################

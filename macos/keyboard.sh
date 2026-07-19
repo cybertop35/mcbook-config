@@ -82,7 +82,7 @@ apply NSGlobalDomain NSAutomaticTextCompletionEnabled bool false
 # Enable full keyboard access
 ###############################################################################
 
-defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
+defaults write NSGlobalDomain AppleKeyboardUIMode -int 3 2>/dev/null || true
 
 
 ###############################################################################

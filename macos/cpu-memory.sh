@@ -124,8 +124,8 @@ apply com.apple.dock mineffect string suck
 # Keep sleep mode lighter
 sudo pmset -a ttyskeepawake 1 2>/dev/null || true
 
-# Reduce wake timers overhead on battery
-sudo pmset -b tcpkeepalive 0 2>/dev/null || true
+# tcpkeepalive is intentionally not disabled. macOS warns that disabling it can
+# break Find My Mac and other sleep/wake network features.
 
 
 ###############################################################################
@@ -139,9 +139,9 @@ sudo pmset -b tcpkeepalive 0 2>/dev/null || true
 # Optimize memory allocation
 ###############################################################################
 
-# Reduce shared memory overhead
-sudo sysctl -w kern.maxfilesperproc=24576 2>/dev/null || true
-sudo sysctl -w kern.maxfiles=24576 2>/dev/null || true
+# File descriptor limits are intentionally not lowered. On this machine the
+# existing values can be higher than 24576, and reducing them is not an
+# optimization.
 
 # vm.swapusage is a read-only status value on macOS, not a safe tuning knob.
 
@@ -164,8 +164,8 @@ apply com.apple.finder QLInlinePreviewMaximumSize int 0
 # Reduce keyboard response time overhead
 ###############################################################################
 
-apply NSGlobalDomain KeyRepeat -int 1
-apply NSGlobalDomain InitialKeyRepeat -int 10
+apply NSGlobalDomain KeyRepeat int 1
+apply NSGlobalDomain InitialKeyRepeat int 10
 
 
 ###############################################################################

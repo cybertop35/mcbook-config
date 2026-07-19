@@ -20,15 +20,15 @@ log "Optimizing network..."
 ###############################################################################
 
 defaults write com.apple.NetworkBrowser \
-BrowseAllInterfaces -bool true
+BrowseAllInterfaces -bool true 2>/dev/null || true
 
 
 ###############################################################################
 # Flush DNS cache
 ###############################################################################
 
-sudo dscacheutil -flushcache
-sudo killall -HUP mDNSResponder
+sudo dscacheutil -flushcache 2>/dev/null || true
+sudo killall -HUP mDNSResponder 2>/dev/null || true
 
 
 ###############################################################################
@@ -36,7 +36,7 @@ sudo killall -HUP mDNSResponder
 ###############################################################################
 
 defaults write com.apple.airport.preferences \
-ShowWiFiDetails -bool true
+ShowWiFiDetails -bool true 2>/dev/null || true
 
 
 log "Network optimization completed."

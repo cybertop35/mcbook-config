@@ -38,7 +38,7 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
 ###############################################################################
 
 sudo defaults write /Library/Preferences/com.apple.loginwindow \
-GuestEnabled -bool false
+GuestEnabled -bool false 2>/dev/null || true
 
 
 ###############################################################################

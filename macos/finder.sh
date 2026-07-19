@@ -104,14 +104,14 @@ apply com.apple.finder _FXShowPosixPathInTitle bool true
 # Disable .DS_Store on network volumes
 ###############################################################################
 
-defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true 2>/dev/null || true
 
 
 ###############################################################################
 # Disable .DS_Store on USB
 ###############################################################################
 
-defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
+defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true 2>/dev/null || true
 
 
 ###############################################################################

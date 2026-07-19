@@ -27,7 +27,7 @@ defaults write com.apple.ncprefs content_visibility -int 0 \
 # Disable Siri suggestions
 ###############################################################################
 
-defaults write com.apple.Siri StatusMenuVisible -bool false
+defaults write com.apple.Siri StatusMenuVisible -bool false 2>/dev/null || true
 
 
 ###############################################################################

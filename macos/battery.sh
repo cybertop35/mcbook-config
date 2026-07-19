@@ -28,10 +28,9 @@ sudo pmset -b powernap 0 2>/dev/null || true
 
 
 ###############################################################################
-# Disable wake for network on battery
+# Keep TCP keepalive enabled.
+# Disabling it can break Find My Mac and other sleep/wake network features.
 ###############################################################################
-
-sudo pmset -b tcpkeepalive 0 2>/dev/null || true
 
 
 ###############################################################################
@@ -69,7 +68,7 @@ sudo pmset -a hibernatemode 3 2>/dev/null || true
 sudo pmset -c powernap 1 2>/dev/null || true
 
 
-pmset -g custom
+pmset -g custom 2>/dev/null || true
 
 
 log "Battery configuration completed."

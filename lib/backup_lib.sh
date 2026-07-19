@@ -3,7 +3,9 @@
 BACKUP_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$BACKUP_LIB_DIR/logger.sh"
 
-BACKUP_BASE="${BACKUP_BASE:-$HOME/.mcbook-backups}"
+MCBOOK_ROOT="$(cd "$BACKUP_LIB_DIR/.." && pwd)"
+BACKUP_BASE=$MCBOOK_ROOT/backups
+#BACKUP_BASE="${BACKUP_BASE:-$HOME/.mcbook-backups}"
 
 backup_domains_for_module() {
     case "$1" in
@@ -36,10 +38,11 @@ create_backup() {
     mkdir -p "$backup_path/defaults" "$backup_path/config" "$backup_path/apps"
     info "Creating backup for '$module': $backup_path"
 
-    while IFS= read -r domain; do
+    local domain
+    for domain in $(backup_domains_for_module "$module"); do
         [[ -n "$domain" ]] || continue
         defaults export "$domain" "$backup_path/defaults/$(safe_domain_filename "$domain").plist" 2>/dev/null || true
-    done < <(backup_domains_for_module "$module")
+    done
 
     if [[ "$module" == "all" || "$module" == "homebrew" || "$module" == "docker" || "$module" == "java" || "$module" == "python" || "$module" == "terminal" ]]; then
         if command -v brew >/dev/null 2>&1; then

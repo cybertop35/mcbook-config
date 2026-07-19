@@ -1,0 +1,19 @@
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+[fetch]
+	prune = true
+[core]
+	autocrlf = input
+	editor = code --wait
+[alias]
+	st = status
+	co = checkout
+	br = branch
+	cm = commit
+	lg = log --oneline --graph --decorate --all
+[color]
+	ui = auto
+[credential]
+	helper = osxkeychain
