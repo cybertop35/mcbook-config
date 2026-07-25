@@ -249,6 +249,7 @@ ${BLUE}COMMANDS:${RESET}
     restore <path>       Restore a backup.
     list                 List available modules.
     status               Show configuration and backup status.
+    doctor               Run read-only system/performance diagnostics.
     backups              Show available backups.
     clean                Remove old backups, keeping the latest 10.
     validate             Validate script/module availability.
@@ -297,6 +298,9 @@ main() {
             ;;
         status)
             show_status
+            ;;
+        doctor)
+            bash "$SCRIPT_DIR/doctor.sh"
             ;;
         backups)
             show_backups

@@ -21,7 +21,7 @@ log "Configuring mouse..."
 # Faster pointer
 ###############################################################################
 
-apply NSGlobalDomain com.apple.mouse.scaling float 2.5
+apply NSGlobalDomain com.apple.mouse.scaling float 2
 
 
 ###############################################################################

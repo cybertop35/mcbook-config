@@ -48,7 +48,7 @@ apply com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag bool true
 # Tracking speed
 ###############################################################################
 
-apply NSGlobalDomain com.apple.trackpad.scaling float 2.5
+apply NSGlobalDomain com.apple.trackpad.scaling float 2
 
 
 ###############################################################################

@@ -18,9 +18,13 @@ log "Configuring Spotlight exclusions..."
 EXCLUDES=(
 "$HOME/.m2"
 "$HOME/.gradle"
+"$HOME/.gradle/caches"
 "$HOME/.npm"
 "$HOME/.cache/pip"
 "$HOME/.cache/uv"
+"$HOME/.cargo"
+"$HOME/.rustup"
+"$HOME/go/pkg/mod"
 "$HOME/node_modules"
 "$HOME/.venv"
 "$HOME/venv"
@@ -28,6 +32,8 @@ EXCLUDES=(
 "$HOME/.sdkman"
 "$HOME/.cache"
 "$HOME/Library/Developer"
+"$HOME/Library/Developer/Xcode/DerivedData"
+"$HOME/Library/Application Support/JetBrains"
 "$HOME/Library/Caches"
 )
 

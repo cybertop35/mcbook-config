@@ -32,6 +32,10 @@ sudo pmset -b powernap 0 2>/dev/null || true
 # Disabling it can break Find My Mac and other sleep/wake network features.
 ###############################################################################
 
+if ! sudo pmset -a tcpkeepalive 1 2>/dev/null; then
+    warn "Could not enable tcpkeepalive. Re-run from an interactive terminal with sudo if Find My Mac/sleep-wake network behavior is required."
+fi
+
 
 ###############################################################################
 # Faster display sleep on battery

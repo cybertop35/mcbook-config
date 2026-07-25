@@ -48,11 +48,20 @@ apply_module_config() {
         log "pipx already available: $(pipx --version 2>&1)"
     fi
 
+    if ! command -v conda >/dev/null 2>&1; then
+            log "Installing miniconda because it is not available"
+            brew install --cask miniconda
+        else
+            log "miniconda already available: $(conda --version 2>&1)"
+        fi
+
     if [ "$python_available" -ne 0 ]; then
         uv python install 3.13 2>/dev/null || true
     fi
 
-    pipx ensurepath 2>/dev/null || warn "pipx ensurepath failed; continuing without changing shell PATH"
+    local pipx_bin_dir="${PIPX_BIN_DIR:-$HOME/.local/bin}"
+    ensure_line "export PATH=\"$pipx_bin_dir:\$PATH\"" "$HOME/.zprofile"
+    ensure_line "export PATH=\"$pipx_bin_dir:\$PATH\"" "$HOME/.zshrc"
 
     local python_tools=(
         ruff

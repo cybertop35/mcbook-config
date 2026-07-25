@@ -45,6 +45,17 @@ sudo pmset -b womp 0 2>/dev/null || true
 sudo pmset -a standby 1 2>/dev/null || true
 
 
+###############################################################################
+# Preserve sleep/wake network features
+###############################################################################
+
+# Keep TCP keepalive enabled. Disabling it can break Find My Mac and other
+# expected macOS sleep/wake behavior.
+if ! sudo pmset -a tcpkeepalive 1 2>/dev/null; then
+    warn "Could not enable tcpkeepalive. Re-run from an interactive terminal with sudo if Find My Mac/sleep-wake network behavior is required."
+fi
+
+
 pmset -g 2>/dev/null || true
 
 

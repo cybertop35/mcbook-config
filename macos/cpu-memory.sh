@@ -53,17 +53,28 @@ apply NSGlobalDomain NSToolbarTitleViewRolloverDelay int 0
 
 
 ###############################################################################
-# Optimize memory: Disable unused services
+# Continuity and local-network services
 ###############################################################################
 
-# Disable Handoff between devices
-apply com.apple.handoff.registration Handoff bool false
-
-# Disable AirDrop
-apply com.apple.NetworkBrowser BrowseAllInterfaces int 0
-
-# Disable Bonjour browsing
-apply com.apple.mDNSResponder BonjourEnabled bool false
+# Handoff, AirDrop, and Bonjour are intentionally left unchanged by default.
+# Disabling them can break Continuity, local service discovery, AirDrop, AirPlay,
+# AirPrint, and development workflows that rely on mDNS. If this machine is used
+# in a locked-down environment where those features are known to be unnecessary,
+# opt in explicitly:
+#
+#   MCBOOK_DISABLE_CONTINUITY=1 ./mcbook.sh apply cpu-memory
+#
+if [[ "${MCBOOK_DISABLE_CONTINUITY:-0}" == "1" ]]; then
+    log "Disabling Continuity/local discovery features because MCBOOK_DISABLE_CONTINUITY=1"
+    apply com.apple.handoff.registration Handoff bool false
+    apply com.apple.NetworkBrowser BrowseAllInterfaces int 0
+    apply com.apple.mDNSResponder BonjourEnabled bool false
+else
+    log "Restoring default Handoff, AirDrop, and Bonjour behavior. Set MCBOOK_DISABLE_CONTINUITY=1 to disable them."
+    defaults delete com.apple.handoff.registration Handoff 2>/dev/null || true
+    defaults delete com.apple.NetworkBrowser BrowseAllInterfaces 2>/dev/null || true
+    defaults delete com.apple.mDNSResponder BonjourEnabled 2>/dev/null || true
+fi
 
 
 ###############################################################################
